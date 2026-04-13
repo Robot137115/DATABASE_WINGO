@@ -1,0 +1,229 @@
+Mantap, kita langsung bikin kamu **punya sistem live sendiri atas nama GitHub kamu (Robot137115)** — tapi ada satu hal penting:
+
+👉 Saya **tidak bisa membuat repo langsung di akun GitHub kamu**, jadi saya siapkan **paket 1-klik yang tinggal kamu upload + deploy (±5 menit jadi)**.
+
+---
+
+# 🚀 STEP 1 — BUAT REPO DI GITHUB
+
+1. Buka 👉 [https://github.com/new](https://github.com/new)
+2. Isi:
+
+   * **Repository name**: `wingo-ai-server`
+   * Public ✅
+3. Klik **Create repository**
+
+---
+
+# 📦 STEP 2 — COPY FILE (SIAP PAKAI)
+
+Klik **Add file → Create new file**, lalu paste ini:
+
+## 🧾 `server.js`
+
+```javascript
+const express = require("express");
+const axios = require("axios");
+const cors = require("cors");
+
+const app = express();
+app.use(cors());
+
+let history = [];
+let lastPeriod = null;
+
+const API_URL = "https://didihub.com/api/main/lottery/curROund?type=2";
+
+async function fetchResult() {
+  try {
+    const res = await axios.get(API_URL);
+    const data = res.data?.data;
+
+    if (!data) return;
+
+    const period = data.issueNumber;
+    const value = parseInt(data.number);
+
+    if (period !== lastPeriod) {
+      lastPeriod = period;
+
+      history.unshift({
+        value,
+        period,
+        time: Date.now()
+      });
+
+      if (history.length > 1000) history.pop();
+    }
+  } catch (err) {
+    console.log(err.message);
+  }
+}
+
+setInterval(fetchResult, 8000);
+
+// ===== AI =====
+function getFrequency() {
+  let freq = Array(10).fill(0);
+  history.forEach(h => freq[h.value]++);
+  return freq;
+}
+
+function getProbability(freq) {
+  let total = history.length || 1;
+  return freq.map(f => +(f / total).toFixed(3));
+}
+
+function getHotCold(freq) {
+  return {
+    hot: freq.indexOf(Math.max(...freq)),
+    cold: freq.indexOf(Math.min(...freq))
+  };
+}
+
+function markovPrediction() {
+  if (history.length < 20) return null;
+
+  let matrix = Array(10).fill(0).map(() => Array(10).fill(0));
+
+  for (let i = 0; i < history.length - 1; i++) {
+    let a = history[i].value;
+    let b = history[i + 1].value;
+    matrix[a][b]++;
+  }
+
+  let last = history[0].value;
+  let row = matrix[last];
+
+  let next = row.indexOf(Math.max(...row));
+
+  return { last, next };
+}
+
+// ===== API =====
+app.get("/wingo", (req, res) => {
+  let freq = getFrequency();
+
+  res.json({
+    latest: history[0] || null,
+    history,
+    stats: {
+      frequency: freq,
+      probability: getProbability(freq),
+      ...getHotCold(freq),
+      markov: markovPrediction()
+    }
+  });
+});
+
+app.listen(3000, () => {
+  console.log("Server jalan");
+});
+```
+
+---
+
+## 🧾 `package.json`
+
+```json
+{
+  "name": "wingo-ai-server",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}
+```
+
+---
+
+## 🧾 `render.yaml` (INI KUNCI 1-KLIK)
+
+```yaml
+services:
+  - type: web
+    name: wingo-ai
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
+```
+
+---
+
+# 🚀 STEP 3 — DEPLOY 1 KLIK
+
+Setelah repo jadi:
+
+👉 Ganti USERNAME di bawah dengan kamu:
+
+```
+https://render.com/deploy?repo=https://github.com/Robot137115/wingo-ai-server
+```
+
+---
+
+## 🔥 Klik → Deploy → Tunggu 2 menit
+
+---
+
+# 🌐 HASILNYA
+
+Kamu akan dapat URL:
+
+```
+https://wingo-ai.onrender.com/wingo
+```
+
+---
+
+# 📱 STEP 4 — EXPO (LANGSUNG PAKAI)
+
+Di `App.js`:
+
+```javascript
+const API = "https://wingo-ai.onrender.com/wingo";
+```
+
+---
+
+# 📲 Jalankan di Expo Go
+
+```bash
+npx expo start --tunnel
+```
+
+Paste URL → DONE
+
+---
+
+# 🔥 SEKARANG KAMU PUNYA
+
+* ✅ Server AI online (punya kamu sendiri)
+* ✅ URL global (bisa diakses HP mana saja)
+* ✅ Realtime + statistik + prediksi
+* ✅ Tidak perlu localhost lagi
+
+---
+
+# 💬 MAU SAYA LANJUTKAN?
+
+Saya bisa lanjut bikin:
+
+### 🔥 Level PRO MAX:
+
+* UI seperti trading dashboard
+* grafik hidup full
+* heatmap warna
+* sinyal auto (entry/skip)
+
+Tinggal bilang:
+👉 **"lanjut UI trading + sinyal AI"**
+
+Saya akan bikin versi yang jauh lebih gila 🔥
