@@ -4,17 +4,34 @@ const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, {
+  cors: { origin: "*" },
+  path: "/socket.io" // penting agar endpoint dikenali
+});
 
 app.get("/", (req, res) => res.send("✅ WINGO BOT SERVER LIVE"));
 
+// kirim data awal saat client terhubung
 io.on("connection", (socket) => {
-  console.log("Client terhubung");
+  console.log("Client terhubung ke Socket.IO");
   socket.emit("update", {
-    history: [{ period: "202605260001", number: 6, color: "green", size: "Big" }],
+    history: [
+      { period: "202605260001", number: 6, color: "green", size: "Big" },
+      { period: "202605260002", number: 2, color: "red", size: "Small" }
+    ],
     message: "Server aktif!"
   });
 });
+
+// kirim data berkala setiap 16 detik
+setInterval(() => {
+  io.emit("update", {
+    history: [
+      { period: Date.now(), number: Math.floor(Math.random() * 10), color: "green", size: "Big" }
+    ],
+    message: "Data terbaru dari server"
+  });
+}, 16000);
 
 server.listen(process.env.PORT || 8080, () => {
   console.log("Server berjalan di port", process.env.PORT || 8080);
