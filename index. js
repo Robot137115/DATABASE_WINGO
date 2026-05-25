@@ -6,12 +6,11 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" },
-  path: "/socket.io" // penting agar endpoint dikenali
+  path: "/socket.io"
 });
 
 app.get("/", (req, res) => res.send("✅ WINGO BOT SERVER LIVE"));
 
-// kirim data awal saat client terhubung
 io.on("connection", (socket) => {
   console.log("Client terhubung ke Socket.IO");
   socket.emit("update", {
@@ -23,7 +22,6 @@ io.on("connection", (socket) => {
   });
 });
 
-// kirim data berkala setiap 16 detik
 setInterval(() => {
   io.emit("update", {
     history: [
