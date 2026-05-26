@@ -1,21 +1,10 @@
-// Import library utama
 const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-
-// Inisialisasi server Express dan Socket.IO
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" },
-  path: "/socket.io"
-});
 
-// Endpoint utama untuk pengecekan server
-app.get("/", (req, res) => res.send("✅ WINGO BOT SERVER LIVE"));
-
-// Fungsi untuk membuat periode Didihub (YYYYMMDD + 4 digit counter)
 let counter = 1;
+let historyData = [];
+
+// Fungsi buat periode Didihub (YYYYMMDD + 4 digit counter)
 function generatePeriod() {
   const now = new Date();
   const y = now.getFullYear();
@@ -25,53 +14,23 @@ function generatePeriod() {
   return `${y}${m}${d}${num}`;
 }
 
-// Fungsi prediksi otomatis mengikuti pola Didihub
-function generateWingoPrediction() {
-  const number = Math.floor(Math.random() * 10);
-  const color = number % 2 === 0 ? "red" : "green";   // genap merah, ganjil hijau
-  const size = number >= 5 ? "Big" : "Small";         // >=5 besar, <5 kecil
-  return {
-    period: generatePeriod(),
-    number,
-    color,
-    size
-  };
+// Fungsi prediksi otomatis
+function generatePrediction() {
+  const angka = Math.floor(Math.random() * 10);
+  const warna = angka % 2 === 0 ? "red" : "green";   // genap merah, ganjil hijau
+  const size = angka >= 5 ? "Big" : "Small";         // >=5 besar, <5 kecil
+  return { period: generatePeriod(), number: angka, color: warna, size };
 }
 
-// Simpan riwayat 10 periode terakhir
-let historyData = [];
+// Endpoint utama
+app.get("/", (req, res) => res.send("✅ WINGO BOT SERVER LIVE"));
 
-// Event koneksi Socket.IO
-io.on("connection", (socket) => {
-  console.log("Client terhubung ke Socket.IO");
-  socket.emit("update", {
-    history: historyData,
-    message: "Server aktif dengan prediksi Didihub"
-  });
+// Endpoint API prediksi (riwayat 10 periode)
+app.get("/api/prediksi", (req, res) => {
+  const prediction = generatePrediction();
+  historyData.unshift(prediction);
+  historyData = historyData.slice(0, 10); // simpan hanya 10 terakhir
+  res.json({ history: historyData, message: "Prediksi otomatis Didihub" });
 });
 
-// Kirim data berkala setiap 16 detik
-setInterval(() => {
-  const prediction = generateWingoPrediction();
-  historyData.unshift(prediction);          // tambahkan ke awal array
-  historyData = historyData.slice(0, 10);   // simpan hanya 10 terakhir
-
-  io.emit("update", {
-    history: historyData,
-    message: "Prediksi otomatis Didihub"
-  });
-}, 16000);
-
-// Middleware khusus agar Vercel tidak menutup koneksi Socket.IO
-app.use((req, res, next) => {
-  if (req.path.startsWith("/socket.io")) {
-    next(); // biarkan Socket.IO menangani
-  } else {
-    res.status(404).send("Not Found");
-  }
-});
-
-// Jalankan server
-server.listen(process.env.PORT || 8080, () => {
-  console.log("Server berjalan di port", process.env.PORT || 8080);
-});
+module.exports = app;
