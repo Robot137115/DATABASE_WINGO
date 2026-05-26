@@ -1,7 +1,9 @@
+// Import library utama
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 
+// Inisialisasi server Express dan Socket.IO
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -9,28 +11,67 @@ const io = new Server(server, {
   path: "/socket.io"
 });
 
+// Endpoint utama untuk pengecekan server
 app.get("/", (req, res) => res.send("✅ WINGO BOT SERVER LIVE"));
 
+// Fungsi untuk membuat periode Didihub (YYYYMMDD + 4 digit counter)
+let counter = 1;
+function generatePeriod() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  const num = String(counter++).padStart(4, "0");
+  return `${y}${m}${d}${num}`;
+}
+
+// Fungsi prediksi otomatis mengikuti pola Didihub
+function generateWingoPrediction() {
+  const number = Math.floor(Math.random() * 10);
+  const color = number % 2 === 0 ? "red" : "green";   // genap merah, ganjil hijau
+  const size = number >= 5 ? "Big" : "Small";         // >=5 besar, <5 kecil
+  return {
+    period: generatePeriod(),
+    number,
+    color,
+    size
+  };
+}
+
+// Simpan riwayat 10 periode terakhir
+let historyData = [];
+
+// Event koneksi Socket.IO
 io.on("connection", (socket) => {
   console.log("Client terhubung ke Socket.IO");
   socket.emit("update", {
-    history: [
-      { period: "202605260001", number: 6, color: "green", size: "Big" },
-      { period: "202605260002", number: 2, color: "red", size: "Small" }
-    ],
-    message: "Server aktif!"
+    history: historyData,
+    message: "Server aktif dengan prediksi Didihub"
   });
 });
 
+// Kirim data berkala setiap 16 detik
 setInterval(() => {
+  const prediction = generateWingoPrediction();
+  historyData.unshift(prediction);          // tambahkan ke awal array
+  historyData = historyData.slice(0, 10);   // simpan hanya 10 terakhir
+
   io.emit("update", {
-    history: [
-      { period: Date.now(), number: Math.floor(Math.random() * 10), color: "green", size: "Big" }
-    ],
-    message: "Data terbaru dari server"
+    history: historyData,
+    message: "Prediksi otomatis Didihub"
   });
 }, 16000);
 
+// Middleware khusus agar Vercel tidak menutup koneksi Socket.IO
+app.use((req, res, next) => {
+  if (req.path.startsWith("/socket.io")) {
+    next(); // biarkan Socket.IO menangani
+  } else {
+    res.status(404).send("Not Found");
+  }
+});
+
+// Jalankan server
 server.listen(process.env.PORT || 8080, () => {
   console.log("Server berjalan di port", process.env.PORT || 8080);
 });
