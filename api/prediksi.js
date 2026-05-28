@@ -8,7 +8,7 @@ function generatePeriod() {
   const m = String(now.getMonth() + 1).padStart(2, "0");
   const d = String(now.getDate()).padStart(2, "0");
   const num = String(counter++).padStart(4, "0");
-  return `${y}${m}${d}${num}`;
+  return y + m + d + num;
 }
 
 function generatePrediction() {
@@ -19,7 +19,7 @@ function generatePrediction() {
     period: generatePeriod(),
     number: angka,
     color: warna,
-    size
+    size: size
   };
 }
 
