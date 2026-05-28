@@ -4,7 +4,7 @@
   "description": "Wingo Bot Server dengan prediksi otomatis Didihub",
   "main": "api/prediksi.js",
   "scripts": {
-    "start": "node api/prediksi.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "express": "^4.18.2"
