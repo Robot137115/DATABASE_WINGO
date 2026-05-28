@@ -1,10 +1,1 @@
-{
-  "name": "database-wingo",
-  "version": "1.0.0",
-  "description": "api prediksi wingo real-time",
-  "main": "index.js",
-  "scripts": {},
-  "keywords": [],
-  "author": "",
-  "license": "MIT"
-}
+{}
