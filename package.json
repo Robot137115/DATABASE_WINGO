@@ -1,7 +1,7 @@
 {
   "name": "database-wingo",
   "version": "1.0.0",
-  "description": "API prediksi Wingo real-time",
+  "description": "api prediksi wingo real-time",
   "main": "index.js",
   "scripts": {},
   "keywords": [],
