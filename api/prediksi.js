@@ -15,11 +15,11 @@ function generatePrediction() {
   const angka = Math.floor(Math.random() * 10);
   const warna = angka % 2 === 0 ? "red" : "green";
   const size = angka >= 5 ? "Big" : "Small";
-  return { 
-    period: generatePeriod(), 
-    number: angka, 
-    color: warna, 
-    size 
+  return {
+    period: generatePeriod(),
+    number: angka,
+    color: warna,
+    size
   };
 }
 
@@ -27,14 +27,12 @@ module.exports = (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+
+  if (req.method === "OPTIONS") return res.status(200).end();
 
   const p = generatePrediction();
   historyData.unshift(p);
   historyData = historyData.slice(0, 10);
-  
+
   return res.status(200).json({ history: historyData });
 };
